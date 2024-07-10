@@ -1,52 +1,66 @@
 "use client";
-import { HandThumbDownIcon, HandThumbUpIcon, HeartIcon, StarIcon } from "@heroicons/react/24/solid";
-import axios from 'axios';
+import {
+  HandThumbDownIcon,
+  HandThumbUpIcon,
+  HeartIcon,
+  StarIcon,
+} from "@heroicons/react/24/solid";
+import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useEffect, useState } from 'react';
-import MyTable from './MyTable';
-import page from './agent-details-review/page';
+import React, { useEffect, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
+import MyTable from "./MyTable";
+import page from "./agent-details-review/page";
 import { compileFunction } from "vm";
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from "next/navigation";
+import Emojis from "../../../components/emojis";
+import ContextProvider from "@/components/ context";
 
-export default function RootLayout({children}) {
-
+export default function RootLayout({ children }) {
   // TODO: LORS DE L'INTEGRATION TRANFERER L'ID DU CHAUFFEUR PAR PARAMETRE GET EN UTILISANT L'ATTRIBUT "driverId" en GET
   // TODO: ACTUALISER LES ADRESSES DES SERVEURS AINSI QUE LES PATHS LORS DE L'INTEGRATION
   const searchParams = useSearchParams();
-  const driverId = searchParams.get('driverId');
-  console.log("=======================", driverId)
-  let DRIVER_SERVICE_URL = "http://localhost:8086"
-  let SEARCH_SERVICE_URL = "http://localhost:8086"
-  const DRIVER_DISPONIBILITY_PATH = "/get-driver-disponibilities"
-  const DRIVER_DATA_PATH = "/get-driver-data"
+  const driverId = "797d6b41-5b9a-41ba-93d3-4a56418e4294";
+  console.log("=======================", driverId);
+  let DRIVER_SERVICE_URL = "http://localhost:8086";
+  let SEARCH_SERVICE_URL = "http://localhost:8086";
+  const DRIVER_DISPONIBILITY_PATH = "/get-driver-disponibilities";
+  const DRIVER_DATA_PATH = "/get-driver-data";
+  const DRIVER_EMOJIS_PATH = "/emojis";
 
-  let iconsNumber = {
-    starts: 1,
+  const [refresh, setRefresh] = useState(true);
+  const [stars, setStars] = useState(4.5);
+
+  const [iconsNumber, setIconsNumber] = useState({
     hearts: 2,
     handUp: 1,
-    handDown: 1
-  }
-  let [driverData, setDriverData] = useState({
-    driverPicture : "/img/chauffeur.png",
-    driverName : "Christian",
-    driverNumber : "6********",
-    driverLocation : "Melen Yaounde",
-    driverMail : "***@gmail.com",
-    formationChauffeur : " 1990 Permis B à AUTO-ECOLE KASAP",
-    ExperienceProfessionnelle : "De mars 2018 à juin 2020: conducteur indépendant",
-    Description : "Je suis Christan, un chauffeur professionnel expérimenté qui s'engage à offrir un service de transport de qualité supérieure. Avec de nombreuses années d'expérience dans ce domaine, j'ai acquis des compétences de conduite avancées et une connaissance approfondie des routes de la région. Je suis reconnu pour mon excellent sens de l'orientation et ma capacité à naviguer avec aisance dans la circulation, en optimisant les itinéraires pour offrir à mes passagers des trajets rapides et sans encombre. Mes passagers apprécient ma conduite sûre et prudente, qui leur permet de voyager en toute tranquillité d'esprit. Au-delà de mes compétences de conduite, je me démarque par mon service attentionné et ma personnalité chaleureuse. J'accueille chaleureusement mes clients, je veille à leurs besoins et je m'engage à faire de chaque trajet une expérience agréable. Mes passagers me décrivent souvent comme un conducteur fiable, courtois et soucieux du bien-être de tous. Que ce soit pour un déplacement professionnel, un rendez-vous important ou un transport de loisir, je suis le choix idéal pour offrir un service de transport de qualité, en toute sécurité et dans une ambiance agréable.",
+    handDown: 1,
+    angry: 0,
   });
+
+  let [driverData, setDriverData] = useState({
+    driverPicture: "/img/chauffeur.png",
+    driverName: "Christian",
+    driverNumber: "6********",
+    driverLocation: "Melen Yaounde",
+    driverMail: "***@gmail.com",
+    formationChauffeur: " 1990 Permis B à AUTO-ECOLE KASAP",
+    ExperienceProfessionnelle:
+      "De mars 2018 à juin 2020: conducteur indépendant",
+    Description:
+      "Je suis Christan, un chauffeur professionnel expérimenté qui s'engage à offrir un service de transport de qualité supérieure. Avec de nombreuses années d'expérience dans ce domaine, j'ai acquis des compétences de conduite avancées et une connaissance approfondie des routes de la région. Je suis reconnu pour mon excellent sens de l'orientation et ma capacité à naviguer avec aisance dans la circulation, en optimisant les itinéraires pour offrir à mes passagers des trajets rapides et sans encombre. Mes passagers apprécient ma conduite sûre et prudente, qui leur permet de voyager en toute tranquillité d'esprit. Au-delà de mes compétences de conduite, je me démarque par mon service attentionné et ma personnalité chaleureuse. J'accueille chaleureusement mes clients, je veille à leurs besoins et je m'engage à faire de chaque trajet une expérience agréable. Mes passagers me décrivent souvent comme un conducteur fiable, courtois et soucieux du bien-être de tous. Que ce soit pour un déplacement professionnel, un rendez-vous important ou un transport de loisir, je suis le choix idéal pour offrir un service de transport de qualité, en toute sécurité et dans une ambiance agréable.",
+  });
+
   let [tableData, setTableData] = useState([
-    { Jour: '28/06/2024', HeureDebut: '08h00', HeureFin: '18h00'},
-    { Jour: '29/06/2024', HeureDebut: '08h00', HeureFin: '18h00'},
-    { Jour: '30/06/2024', HeureDebut: '12h00', HeureFin: '02h00'},
-    { Jour: '01/07/2024', HeureDebut: '08h00', HeureFin: '18h00'}
+    { Jour: "28/06/2024", HeureDebut: "08h00", HeureFin: "18h00" },
+    { Jour: "29/06/2024", HeureDebut: "08h00", HeureFin: "18h00" },
+    { Jour: "30/06/2024", HeureDebut: "12h00", HeureFin: "02h00" },
+    { Jour: "01/07/2024", HeureDebut: "08h00", HeureFin: "18h00" },
   ]);
   let [disponible, setDisponible] = useState(true);
 
-  
-  useEffect(() => {
+  /* useEffect(() => {
     axios.get(SEARCH_SERVICE_URL+DRIVER_DISPONIBILITY_PATH+"?driverId="+driverId)
     .then(response => {
       if(response.data.length == 0){
@@ -62,7 +76,45 @@ export default function RootLayout({children}) {
       setDriverData(response.data)
     }).catch(error => console.error(error))
 
-  }, []);
+  }, []); */
+
+  /* useEffect(() => {
+    const interval = setInterval(() => {
+      setRefresh((prevRefresh) => !prevRefresh);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []); */
+
+  /* useEffect(() => {
+    const fetchIconsNumber = async () => {
+      try {
+        const response = await axios.get(DRIVER_EMOJIS_PATH);
+        setIconsNumber(response.data);
+      } catch (error) {
+        console.error('Erreur lors de la récupération du nombre d\'icônes :', error);
+      }
+    };
+
+    fetchIconsNumber();
+  }, [refresh]); */
+
+  const sendEmoji = async (emojiName) => {
+    var emojiData = {
+      userId: "123",
+      driverId: driverId,
+      name: emojiName,
+    };
+    try {
+      await axios.post(DRIVER_EMOJIS_PATH, emojiData);
+      console.log("Emoji envoyé avec succès au backend");
+    } catch (error) {
+      console.error(
+        "fichier emojis.tsx, Erreur lors de l'envoi de l'emoji au backend:",
+        error
+      );
+    }
+  };
 
   return (
     <div className="py-[30px] lg:py-[60px] bg-[var(--bg-2)] px-3">
@@ -86,65 +138,73 @@ export default function RootLayout({children}) {
               <ul className="flex items-center justify-center flex-wrap mb-7">
                 <li>
                   <p className="mb-0">
-                    Contact: <span className="text-primary"> {driverData.driverNumber} | {driverData.driverLocation} </span>
+                    Contact:{" "}
+                    <span className="text-primary">
+                      {" "}
+                      {driverData.driverNumber} | {driverData.driverLocation}{" "}
+                    </span>
                   </p>
                 </li>
               </ul>
               <ul className="flex items-center justify-center flex-wrap mb-7">
                 <li>
                   <p className="mb-0">
-                    Mail: <span className="text-primary">{driverData.driverMail}</span>
+                    Mail:{" "}
+                    <span className="text-primary">
+                      {driverData.driverMail}
+                    </span>
                   </p>
                 </li>
-                <div className='flex min-w-full justify-evenly my-3'>
-                  <div className='flex items-center'>
-                    <StarIcon className="w-5 h-5 text-[var(--tertiary)]" /> <span className='ml-2'>{iconsNumber.starts}</span>
+                <div className="flex min-w-full justify-evenly my-3">
+                  <div className="flex items-center mr-3">
+                    <span className="mr-1 text-2xl">{stars}</span>{" "}
+                    <StarIcon className="w-6 h-6 text-[var(--tertiary)]" />
                   </div>
-                  <div className='flex items-center'>
-                    <HeartIcon className="w-5 h-5 text-red-500" /> <span className='ml-2'>{iconsNumber.hearts}</span>
-                  </div>
-                  <div className='flex items-center'>
-                    <HandThumbUpIcon className="w-5 h-5 text-blue-500" /> <span className='ml-2'>{iconsNumber.handUp}</span>
-                  </div>
-                  <div className='flex items-center'>
-                    <HandThumbDownIcon className="w-5 h-5 text-gray-900" /> <span className='ml-2'>{iconsNumber.handDown}</span>
-                  </div>
+                  <Emojis />
                 </div>
                 <li className="flex gap-4">
-                  {disponible?
-                    <div className='flex gap-4'>
-                      <Link href="#"
-                        className="inline-flex items-center gap-2 p-2 rounded-full bg-[#2D3A96] text-white :bg-primary-400 hover:text-white font-medium mt-2">
+                  {disponible ? (
+                    <div className="flex gap-4">
+                      <Link
+                        href="#"
+                        className="inline-flex items-center gap-2 p-2 rounded-full bg-[#2D3A96] text-white :bg-primary-400 hover:text-white font-medium mt-2"
+                      >
                         <span className="inline-block"> Contacter </span>
                       </Link>
-                      <div href="#"
-                        className="inline-flex items-center gap-2 p-2 rounded-full bg-[#2AC144] text-white :bg-primary-400 hover:text-white font-medium mt-2">
+                      <div
+                        href="#"
+                        className="inline-flex items-center gap-2 p-2 rounded-full bg-[#2AC144] text-white :bg-primary-400 hover:text-white font-medium mt-2"
+                      >
                         <span className="inline-block"> Disponible </span>
                       </div>
                     </div>
-                    :
-                    <div href="#"
-                      className="inline-flex items-center gap-2 p-2 rounded-full bg-[#F84800] text-white :bg-primary-400 hover:text-white font-medium mt-2">
+                  ) : (
+                    <div
+                      href="#"
+                      className="inline-flex items-center gap-2 p-2 rounded-full bg-[#F84800] text-white :bg-primary-400 hover:text-white font-medium mt-2"
+                    >
                       <span className="inline-block"> Indisponible </span>
                     </div>
-                  }
-                  
+                  )}
                 </li>
               </ul>
-              
+
               <div className="border border-dashed my-7"></div>
               <ul className="flex flex-col gap-4 mb-10 max-text-30 mx-auto">
-                {disponible &&
+                {disponible && (
                   <>
                     <li>
                       <div className="items-center gap-2 overflow-x-auto">
-                        <MyTable className="min-w-[500px]" tableData = {tableData} />
+                        <MyTable
+                          className="min-w-[500px]"
+                          tableData={tableData}
+                        />
                       </div>
                     </li>
                     <div className="border border-dashed my-2"></div>
                   </>
-                }
-                
+                )}
+
                 <li>
                   <div className="items-center gap-2">
                     {/* <CalendarDaysIcon className="w-5 h-5 text-primary" /> */}
@@ -162,7 +222,9 @@ export default function RootLayout({children}) {
                     <div className="block text-1xl font-semibold clr-neutral-600 mb-4">
                       Expérience professionelle
                     </div>
-                    <div className="mb-0">{driverData.ExperienceProfessionnelle}</div>
+                    <div className="mb-0">
+                      {driverData.ExperienceProfessionnelle}
+                    </div>
                   </div>
                 </li>
               </ul>
@@ -186,15 +248,12 @@ export default function RootLayout({children}) {
               <span className="block text-2xl font-semibold clr-neutral-600 mb-4">
                 Details
               </span>
-              <div className="mb-0">
-                {driverData.Description}
-              </div>
-            
+              <div className="mb-0">{driverData.Description}</div>
             </div>
           </div>
           <div className="col-span-12 xl:col-span-8">
             <div className="grid grid-cols-12 gap-4 align-items-start">
-              {children}
+              <ContextProvider>{children}</ContextProvider>
             </div>
           </div>
         </div>

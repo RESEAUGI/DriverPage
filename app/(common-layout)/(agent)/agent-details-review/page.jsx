@@ -1,114 +1,112 @@
-"use client"
-import { HandThumbDownIcon, HandThumbUpIcon, HeartIcon, StarIcon } from "@heroicons/react/24/solid";
+"use client";
 import Link from "next/link";
-import { comments } from '../layout';
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { comments } from "../layout";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import ReviewModal from "../../../../components/ReviewModal";
+import Review from "../../../../components/Review";
+import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "crypto";
+import { useContextProvider } from "@/components/ context";
 
-export default function page(){
+const driverId = "797d6b41-5b9a-41ba-93d3-4a56418e4294";
+const userId = "b21ccd75-5be8-4129-bd14-f4837b935fa3";
+const reservationId = uuidv4();
+const userName = "Gerard";
+
+export default function page() {
   // TODO: ACTUALISER LES ADRESSES DES SERVEURS AINSI QUE LES PATHS LORS DE L'INTEGRATION
-  let REVIEW_SERVICE_URL = "http://localhost:8080"
-  let DRIVER_COMMENTS_PATH = "/get-driver-comments"
+  let REVIEW_SERVICE_URL = "http://localhost:8000";
+  let DRIVER_COMMENTS_PATH = "/reviews";
+
+  const {reload,setReload} = useContextProvider();
 
   const [comments, setcomments] = useState([
     {
-      name: "William",
-      job: "DevOps",
-      date: "23.10.2024",
-      hour: "18h15",
-      icon: "star",
-      comment: "Excellent chauffeur ! Christian était très professionnel et ponctuel. J'ai passé un trajet très agréable avec lui. Je le recommande vivement !"
+      reviewId: uuidv4(),
+      userId: uuidv4(),
+      driverId: uuidv4(),
+      reservationId: uuidv4(),
+      userName: "William",
+      comment:
+        "Excellent chauffeur ! Christian était très professionnel et ponctuel. J'ai passé un trajet très agréable avec lui. Je le recommande vivement !",
+      createdAt: "23/10/2024",
+      updatedAt: "18h15",
+      note: 3,
+      likes: 3,
+      dislikes: 4,
     },
     {
-      name: "Lushai",
-      job: "Business Analyst",
-      date: "23.10.2024",
-      hour: "18h15",
-      icon: "heart",
-      comment: "Christian était un chauffeur sympathique et courtois. Il a pris le temps de discuter pendant le trajet et m'a fait me sentir à l'aise. Je le choisirai à nouveau pour mes prochains déplacements."
+      reviewId: uuidv4(),
+      userId: uuidv4(),
+      driverId: uuidv4(),
+      reservationId: uuidv4(),
+      userName: "Lushai",
+      comment:
+        "Christian était un chauffeur sympathique et courtois. Il a pris le temps de discuter pendant le trajet et m'a fait me sentir à l'aise. Je le choisirai à nouveau pour mes prochains déplacements.",
+      createdAt: "23/10/2024",
+      updatedAt: "18h15",
+      note: 5,
+      likes: 10,
+      dislikes: 1,
     },
-    {
-      name: "Josée",
-      job: "Entrepreneure",
-      date: "23.10.2024",
-      hour: "18h15",
-      icon: "hand_up",
-      comment: "Je recommande fortement Christian en tant que chauffeur. Il était très professionnel et attentionné. Le trajet s'est déroulé sans problème et j'ai beaucoup apprécié sa compagnie."
-    },
-    {
-      name: "Cedrick",
-      job: "Ingénieur logiciel",
-      date: "23.10.2024",
-      hour: "18h15",
-      icon: "hand_down",
-      comment: "Il était en retard "
-    },
-    {
-      name: "Foueguim",
-      job: "Webmaster",
-      date: "23.10.2024",
-      hour: "18h15",
-      icon: "heart",
-      comment: "Christian était un excellent chauffeur. Il était amical, serviable et a rendu le trajet très agréable. Je le recommande à tous ceux qui recherchent un chauffeur fiable."
-    }
   ]);
-  useEffect(() => {
-    const driverId = "IDENTIFIANT PASSE EN GET"
-    axios.get(REVIEW_SERVICE_URL+DRIVER_COMMENTS_PATH+"?driverId="+driverId)
-    .then(response => {
-      setcomments(response.data)
-    })
-    .catch(error => console.error(error))
 
-  }, []);
-  
+  useEffect(() => {
+    console.log("tryyyyyyyyyyy1");
+    const fetchData = async () => {
+      console.log("tryyyyyyyyyyy");
+      try {
+        const response = await fetch(
+          `${REVIEW_SERVICE_URL}/api/reviews/driver/${driverId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log("Try fetch");
+        if (!response.ok) {
+          console.error(
+            "Response error:",
+            response.status,
+            response.statusText
+          );
+          const errorData = await response.json();
+          console.error("Error data:", errorData);
+          throw new Error(`Network response was not ok (${response.status})`);
+        }
+
+        const reviews = await response.json();
+        setcomments([...reviews]);
+        // Traiter les reviews retournées par le serveur
+      } catch (error) {
+        console.error("Error getting reviews:", error);
+        // Gérer l'erreur
+      }
+    };
+    fetchData();
+  }, [reload]);
+  console.log(comments.length);
+  console.log("Reviews:", comments);
+
   return (
     <div className="col-span-12">
       <div className="p-3 bg-white rounded-2xl mb-8">
         <div className="bg-white rounded-2xl">
-          {
-            comments.map((comment, index)=>{
-              return(
-                <div key={index} className="bg-[var(--bg-1)] rounded-2xl p-3 sm:p-4 lg:p-6 mb-2">
-                  <div className="flex items-center flex-wrap justify-between gap-4 ">
-                    <div className="flex gap-5 items-center">
-                      <div className="flex-grow">
-                        <h5 className="mb-1 font-semibold"> {comment.name} | {comment.job}</h5>
-                      </div>
-                      <div>
-                        {
-                          function(){
-                            if(comment.icon == "star") return(<StarIcon className="w-5 h-5 text-[var(--tertiary)]" />)
-                            if(comment.icon == "heart") return(<HeartIcon className="w-5 h-5 text-red-500" />)
-                            if(comment.icon == "hand_up") return(<HandThumbUpIcon className="w-5 h-5 text-blue-500" />)
-                            if(comment.icon == "hand_down") return(<HandThumbDownIcon className="w-5 h-5 text-gray-900" />)
-                          }()
-                        }
-                      </div>
-                    </div>
-                    
-                    <div className="text-sm-end">
-                      <p className="mb-1"> {comment.date} à {comment.hour}</p>
-                    </div>
-                  </div>
-                  <div className="border border-dashed my-2"></div>
-                  <p className="mb-0 clr-neutral-500">
-                    {comment.comment}
-                  </p>
-                </div>
-              )
-            })
-          }
-          
-          
-          <Link
-            href="#"
-            className="featured-tab link font-semibold clr-primary-400 inline-block py-3 px-6 bg-[var(--primary-light)] hover:bg-[#2D3A96] hover:text-white rounded-full active">
-            Ajouter un commentaire
-          </Link>
+          {comments.map((comment, index) => {
+            return <Review comment={comment} key={index} index={index} />;
+          })}
+
+          <ReviewModal
+            userId={userId.toString()}
+            driverId={driverId.toString()}
+            reservationId={reservationId.toString()}
+            userName={userName}
+          />
         </div>
       </div>
-
     </div>
   );
-};
+}
