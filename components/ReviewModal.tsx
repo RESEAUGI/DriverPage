@@ -1,26 +1,30 @@
-import React, { useState } from 'react';
-import { StarIcon } from '@heroicons/react/24/solid';
-import Modal from 'react-modal';
+import React, { useState } from "react";
+import { StarIcon } from "@heroicons/react/24/solid";
+import Modal from "react-modal";
 import { v4 as uuidv4 } from "uuid";
-import { useContextProvider } from './ context';
+import { useContextProvider } from "./ context";
 //import {REVIEW_SERVICE_URL} from "@/components/UrlConfig.js";
-interface propriety{
-  userId:string;
-  driverId:string;
-  reservationId:string,
-  userName:string
+interface propriety {
+  userId: string;
+  driverId: string;
+  reservationId: string;
+  userName: string;
 }
 
-
-const ReviewModal = ({userId, driverId,reservationId,userName}:propriety) => {
+const ReviewModal = ({
+  userId,
+  driverId,
+  reservationId,
+  userName,
+}: propriety) => {
   // const REVIEW_SERVICE_URL = process.env.REVIEW_SERVICE_URL;
   // let REVIEW_SERVICE_URL = "http://localhost:8080/review-service"
   const REVIEW_SERVICE_URL = "http://localhost:8000";
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [ratingStar, setRatingStar] = useState(0);
-  const [reviewerComment, setReviewerComment] = useState('');
+  const [reviewerComment, setReviewerComment] = useState("");
 
-  const {reload,setReload} = useContextProvider();
+  const { reload, setReload, refresh, setRefresh } = useContextProvider();
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
@@ -30,55 +34,65 @@ const ReviewModal = ({userId, driverId,reservationId,userName}:propriety) => {
     setIsModalOpen(false);
     // Réinitialiser les champs du formulaire
     setRatingStar(0);
-    setReviewerComment('');
+    setReviewerComment("");
   };
 
-  const handleSubmitCommentForm =async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmitCommentForm = async (
+    e: React.FormEvent<HTMLFormElement>
+  ) => {
     e.preventDefault();
-    const reviewId = uuidv4()
+    const reviewId = uuidv4();
     const formData = new FormData(e.currentTarget);
     console.log(formData);
     const data = Object.fromEntries(formData);
     const newComment = {
       reviewId,
       userId,
-      driverId:"797d6b41-5b9a-41ba-93d3-4a56418e4294",
+      driverId: "797d6b41-5b9a-41ba-93d3-4a56418e4294",
       reservationId,
       userName: userName,
       comment: data["reviewer-comment"].toString(),
       createdAt: new Date().toString,
       updatedAt: new Date().toString(),
-      note:ratingStar+1,
+      note: ratingStar + 1,
       likes: 0,
       unlikes: 0,
-      icon:(ratingStar==1 || ratingStar==2)?"hand_down":3?"hand_up":4?"heart":"star"
+      icon:
+        ratingStar == 1 || ratingStar == 2
+          ? "hand_down"
+          : 3
+          ? "hand_up"
+          : 4
+          ? "heart"
+          : "star",
     };
     console.log("New comment", newComment);
-    const finalPath = REVIEW_SERVICE_URL+'/api/reviews/create';
+    const finalPath = REVIEW_SERVICE_URL + "/api/reviews/create";
     console.log(finalPath);
-    
+
     try {
       const response = await fetch(finalPath, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(newComment),
       });
-    
+
       if (!response.ok) {
-        console.error('Response error:', response.status, response.statusText);
+        console.error("Response error:", response.status, response.statusText);
         const errorData = await response.json();
-        console.error('Error data:', errorData);
+        console.error("Error data:", errorData);
         throw new Error(`Network response was not ok (${response.status})`);
       }
-    
+
       const result = await response.json();
-      console.log("result ReviewModal: ",result);
+      console.log("result ReviewModal: ", result);
       setReload(!reload);
+      setRefresh(!refresh)
       // Gérer la réponse (par exemple, afficher un message de succès)
     } catch (error) {
-      console.error('ReviewModal, Error:', error);
+      console.error("ReviewModal, Error:", error);
       // Gérer l'erreur (par exemple, afficher un message d'erreur)
     }
     //e.currentTarget.reset();
@@ -94,10 +108,14 @@ const ReviewModal = ({userId, driverId,reservationId,userName}:propriety) => {
       >
         <div className="flex gap-1 mb-3">
           {[1, 2, 3, 4, 5].map((index) => (
-            <StarIcon key={index} className={`w-5 h-5`} style={{ cursor: 'pointer' }} />
+            <StarIcon
+              key={index}
+              className={`w-5 h-5`}
+              style={{ cursor: "pointer" }}
+            />
           ))}
         </div>
-       Ajouter un commentaire
+        Ajouter un commentaire
       </button>
 
       <Modal
@@ -114,15 +132,22 @@ const ReviewModal = ({userId, driverId,reservationId,userName}:propriety) => {
             <StarIcon
               key={index}
               onClick={() => setRatingStar(index)}
-              className={`w-10 h-10 ${index <= ratingStar ? 'text-[var(--tertiary)]' : 'text-[#AAAAAA]'}`}
-              style={{ cursor: 'pointer' }}
+              className={`w-10 h-10 ${
+                index <= ratingStar
+                  ? "text-[var(--tertiary)]"
+                  : "text-[#AAAAAA]"
+              }`}
+              style={{ cursor: "pointer" }}
             />
           ))}
         </div>
         <form onSubmit={handleSubmitCommentForm}>
           <div className="grid grid-cols-12 gap-4">
             <div className="col-span-12">
-              <label htmlFor="review-review" className="text-xl font-medium block mb-3">
+              <label
+                htmlFor="review-review"
+                className="text-xl font-medium block mb-3"
+              >
                 Commentaire
               </label>
               <textarea

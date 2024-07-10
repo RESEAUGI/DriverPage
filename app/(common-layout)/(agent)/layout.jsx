@@ -27,10 +27,11 @@ export default function RootLayout({ children }) {
   let SEARCH_SERVICE_URL = "http://localhost:8086";
   const DRIVER_DISPONIBILITY_PATH = "/get-driver-disponibilities";
   const DRIVER_DATA_PATH = "/get-driver-data";
-  const DRIVER_EMOJIS_PATH = "/emojis";
+  const AVERAGE_RATING_PATH = "http://localhost:8000/api/reviews/driver/rating";
 
   const [refresh, setRefresh] = useState(true);
-  const [stars, setStars] = useState(4.5);
+  const [averageRating, setAverageRating] = useState(0);
+  const [nbReviews, setNbReviews] = useState(0);
 
   const [iconsNumber, setIconsNumber] = useState({
     hearts: 2,
@@ -99,23 +100,25 @@ export default function RootLayout({ children }) {
     fetchIconsNumber();
   }, [refresh]); */
 
-  const sendEmoji = async (emojiName) => {
-    var emojiData = {
-      userId: "123",
-      driverId: driverId,
-      name: emojiName,
+  useEffect(() => {
+    const fetchIconsNumber = async () => {
+      try {
+        console.log("Dans le fetch..............................");
+        const response = await axios.get(AVERAGE_RATING_PATH + "/" + driverId);
+        if (response.data !== null) {
+          console.log("response for average_rating_get", response.data);
+          setAverageRating(response.data.averageRating);
+          setNbReviews(response.data.totalReviews);
+        }
+      } catch (error) {
+        console.error(
+          "Erreur lors de la récupération de l'average rating :",
+          error
+        );
+      }
     };
-    try {
-      await axios.post(DRIVER_EMOJIS_PATH, emojiData);
-      console.log("Emoji envoyé avec succès au backend");
-    } catch (error) {
-      console.error(
-        "fichier emojis.tsx, Erreur lors de l'envoi de l'emoji au backend:",
-        error
-      );
-    }
-  };
-
+    fetchIconsNumber();
+  }, [refresh]);
   return (
     <div className="py-[30px] lg:py-[60px] bg-[var(--bg-2)] px-3">
       <div className="container max-w-[1600px]">
@@ -157,8 +160,11 @@ export default function RootLayout({ children }) {
                 </li>
                 <div className="flex min-w-full justify-evenly my-3">
                   <div className="flex items-center mr-3">
-                    <span className="mr-1 text-2xl">{stars}</span>{" "}
+                    <span className="mr-1 text-2xl">
+                      {averageRating.toFixed(1)}
+                    </span>{" "}
                     <StarIcon className="w-6 h-6 text-[var(--tertiary)]" />
+                    <span className="ml-2 pt-2 text-gray-500 text-s"> {nbReviews} avis</span>{" "}
                   </div>
                   <Emojis />
                 </div>
@@ -253,7 +259,9 @@ export default function RootLayout({ children }) {
           </div>
           <div className="col-span-12 xl:col-span-8">
             <div className="grid grid-cols-12 gap-4 align-items-start">
-              <ContextProvider>{children}</ContextProvider>
+              <ContextProvider setRefresh={setRefresh} refresh={refresh}>
+                {children}
+              </ContextProvider>
             </div>
           </div>
         </div>

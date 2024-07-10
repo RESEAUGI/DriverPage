@@ -19,7 +19,6 @@ export default function Emojis() {
     const DRIVER_EMOJIS_PATH = "http://localhost:8000/emojis"
   
     const [refresh,setRefresh]=useState(true);
-    const [stars, setStars] = useState(4.5);
   
     const [iconsNumber, setIconsNumber] = useState({
       driverId:driverId,

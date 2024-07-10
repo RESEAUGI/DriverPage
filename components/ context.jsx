@@ -3,11 +3,14 @@ import { useState, useContext } from "react";
 
 export const context = createContext(null);
 
-export default function ContextProvider({ children }) {
+export default function ContextProvider({ children, setRefresh, refresh }) {
   const [reload, setReload] = useState(false);
 
   const contextValue = {
-    reload,setReload
+    reload,
+    setReload,
+    refresh,
+    setRefresh,
   };
 
   return <context.Provider value={contextValue}>{children}</context.Provider>;
