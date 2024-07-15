@@ -87,18 +87,7 @@ export default function RootLayout({ children }) {
     return () => clearInterval(interval);
   }, []); */
 
-  /* useEffect(() => {
-    const fetchIconsNumber = async () => {
-      try {
-        const response = await axios.get(DRIVER_EMOJIS_PATH);
-        setIconsNumber(response.data);
-      } catch (error) {
-        console.error('Erreur lors de la récupération du nombre d\'icônes :', error);
-      }
-    };
-
-    fetchIconsNumber();
-  }, [refresh]); */
+ 
 
   useEffect(() => {
     const fetchIconsNumber = async () => {
